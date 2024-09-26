@@ -1,101 +1,255 @@
-import Image from "next/image";
+"use client";
+import { useState } from "react";
+
+type CheckedItems = {
+  makanan: string[];
+  pakaian: string[];
+  barangLain: string[];
+};
+
+type WajibItems = {
+  makanan: string[];
+  pakaian: string[];
+  barangLain: string[];
+};
+
+// Daftar item yang akan ditampilkan di UI
+const uiItems = [
+  {
+    kategori: "makanan",
+    items: [
+      "Ultra Mimikids",
+      "Roti Sobek",
+      "Makaroni Dua Kelinci",
+      "Nasi Goreng Kecap + Tahu Tempe",
+      "Better",
+      "Air Matang 1,5L",
+      "Air Mentah 1,5L",
+    ],
+  },
+  {
+    kategori: "pakaian",
+    items: [
+      "Kemeja putih Polos Panjang",
+      "Celana Kain Hitam",
+      "Kaos Kaki Hitam Sampai Mata Kaki",
+      "Slayer",
+      "Name Tag",
+      "Ikat Pinggang",
+      "Topi",
+      "Jam Tangan",
+    ],
+  },
+  {
+    kategori: "barangLain",
+    items: [
+      "Kunci kost/rumah",
+      "Charger",
+      "Kunci Kendaraan",
+      "Plastik Ukuran Sedang",
+      "Sendal",
+      "Pulpen",
+    ],
+  },
+];
+
+// Daftar item wajib
+const wajibItems: WajibItems = {
+  makanan: [
+    "Ultra Mimikids",
+    "Roti Sobek",
+    "Makaroni Dua Kelinci",
+    "Nasi Goreng Kecap + Tahu Tempe",
+    "Better",
+    "Air Matang 1,5L",
+    "Air Mentah 1,5L",
+  ],
+  pakaian: [
+    "Kemeja putih Polos Panjang",
+    "Celana Kain Hitam",
+    "Kaos Kaki Hitam Sampai Mata Kaki",
+    "Slayer",
+    "Name Tag",
+    "Ikat Pinggang",
+    "Topi",
+  ],
+  barangLain: ["Plastik Ukuran Sedang", "Sendal", "Pulpen"],
+};
+
+const forbiddenItems: string[] = [
+  "Minuman Alkohol",
+  "Obat-obatan Terlarang",
+  "Jam Tangan",
+  "Kunci Kendaraan",
+  "Charger",
+];
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [checkedItems, setCheckedItems] = useState<CheckedItems>({
+    makanan: [],
+    pakaian: [],
+    barangLain: [],
+  });
+  const [errors, setErrors] = useState<string[]>([]);
+  const [completionPercentage, setCompletionPercentage] = useState<number>(0);
+  const [totalWajibItems, setTotalWajibItems] = useState<number>(0); // State untuk total wajib items
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+  // Menghitung total item wajib saat komponen dimuat
+  const calculateTotalWajibItems = () => {
+    const total =
+      wajibItems.makanan.length +
+      wajibItems.pakaian.length +
+      wajibItems.barangLain.length;
+    setTotalWajibItems(total);
+  };
+
+  // Hitung total item wajib saat komponen dimuat
+  useState(() => {
+    calculateTotalWajibItems();
+  }, []);
+
+  const handleItemCheck = (category: keyof CheckedItems, item: string) => {
+    setCheckedItems((prev) => ({
+      ...prev,
+      [category]: prev[category].includes(item)
+        ? prev[category].filter((i) => i !== item)
+        : [...prev[category], item],
+    }));
+  };
+
+  const checkForbiddenItems = () => {
+    const selectedItems = [
+      ...checkedItems.makanan,
+      ...checkedItems.pakaian,
+      ...checkedItems.barangLain,
+    ];
+    const forbiddenSelected = selectedItems.filter((item) =>
+      forbiddenItems.includes(item)
+    );
+    setErrors(forbiddenSelected);
+
+    // Hitung item wajib yang sudah terpilih
+    const selectedWajibItems = [
+      ...checkedItems.makanan.filter((item) =>
+        wajibItems.makanan.includes(item)
+      ),
+      ...checkedItems.pakaian.filter((item) =>
+        wajibItems.pakaian.includes(item)
+      ),
+      ...checkedItems.barangLain.filter((item) =>
+        wajibItems.barangLain.includes(item)
+      ),
+    ].length;
+
+    const completion = (selectedWajibItems / totalWajibItems) * 100; // Menggunakan totalWajibItems dari state
+    setCompletionPercentage(completion);
+  };
+
+  return (
+    <div className="mx-3 my-3">
+      <div className="w-full max-w-md mx-auto mt-5 p-5 ">
+        <h1 className="font-bold text-3xl text-center">
+          Selamat datang para Baratheon
+        </h1>
+        <p className="mt-4 text-center text-lg">
+          <p className="mt-4 text-center text-lg">
+            What's up, Baratheon Squad! 🌟🔥 Selamat datang buat akang-akang dan
+            teteh-teteh kece badai! ✨🤩 Kita ini <strong>Baratheon</strong>,
+            keluarga besar yang solid dan unstoppable! 💪👑 Di sini, kita gas
+            terus bareng-bareng buat bantuin sesama, biar nggak ada yang kena
+            hukuman atau tersandung masalah.{" "}
+            <strong>Teamwork makes the dream work</strong>, bro-sis, karena cuma
+            bareng kita bisa pecahkan tantangan apapun! 🙌
+            <br />
+            <br />
+            Ingat, kita bukan cuma kerja keras, tapi juga kerja cerdas. Kalau
+            kita kompak, hukumannya lewat aja deh! 😉 Jadi, siap-siap kasih yang
+            terbaik dan bikin Baratheon terus berkibar! 🏆
+            <br />
+            <br />
+            Let’s get this bread, Baratheon! 🚀🔥
+          </p>
+          <p className="mt-4 text-center text-lg">
+            Buat kamu yang punya kebiasaan bawa barang yang tidak boleh
+            digunakan di gamatif, cek lagi dan lihat juga di list cek barang
+            bawaan! Jika ada barang seperti jam tangan, mohon untuk tidak dibawa
+            dan bawa sesuai list. Nah, untuk presentase 100% hanya dilihat dari
+            barang wajib, jadi meskipun sudah 100% cek dulu ya, ada beberapa
+            barang yang dilarang yang tidak boleh dibawa. 😎
+          </p>
+        </p>
+      </div>
+
+      {/* Form Auto Check Items */}
+      <div className="w-full max-w-md mx-auto mt-5 p-5">
+        <h2 className="font-semibold text-2xl text-center">
+          Auto Cek Barang Bawaan
+        </h2>
+
+        {uiItems.map(({ kategori, items }) => (
+          <div key={kategori}>
+            <h3 className="font-semibold text-xl mt-4">
+              {kategori.charAt(0).toUpperCase() + kategori.slice(1)}
+            </h3>
+            {items.map((item) => (
+              <div key={item} className="mb-2">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    className="form-checkbox"
+                    checked={checkedItems[
+                      kategori as keyof CheckedItems
+                    ].includes(item)}
+                    onChange={() =>
+                      handleItemCheck(kategori as keyof CheckedItems, item)
+                    }
+                  />
+                  <span>{item}</span>
+                </label>
+              </div>
+            ))}
+          </div>
+        ))}
+
+        <button
+          className="mt-4 w-full bg-blue-500 text-white py-2 rounded"
+          onClick={checkForbiddenItems}
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          Cek Barang
+        </button>
+
+        {/* Display forbidden items in red */}
+        {errors.length > 0 && (
+          <div className="mt-4">
+            <h3 className="text-red-600 font-bold">
+              Barang yang Tidak Boleh Dibawa:
+            </h3>
+            <ul className="list-disc list-inside text-red-600">
+              {errors.map((item, index) => (
+                <li key={index}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Display completion percentage */}
+        {completionPercentage > 0 && (
+          <div className="mt-4">
+            <h3 className="font-semibold">
+              Barang Wajib yang Sudah Dibawa: {completionPercentage.toFixed(2)}%
+            </h3>
+            {completionPercentage < 100 && (
+              <p className="text-red-600">
+                Anda masih kurang{" "}
+                {Math.ceil(
+                  ((100 - completionPercentage) / 100) * totalWajibItems
+                )}{" "}
+                item!
+              </p>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
