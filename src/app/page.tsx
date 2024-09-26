@@ -106,7 +106,7 @@ export default function Home() {
   // Hitung total item wajib saat komponen dimuat
   useState(() => {
     calculateTotalWajibItems();
-  }, []);
+  },);
 
   const handleItemCheck = (category: keyof CheckedItems, item: string) => {
     setCheckedItems((prev) => ({
